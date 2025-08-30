@@ -1,13 +1,4 @@
-import { MoodLevel, ProfessionalType, MessageType, HabitCategory } from '../enums';
-
-export interface ChatMessage {
-  id: string;
-  userId: string;
-  content: string;
-  type: MessageType;
-  timestamp: Date;
-  moodAnalysis?: MoodAnalysis;
-}
+import { MoodLevel, ProfessionalType, HabitCategory, MessageType } from '../enums';
 
 export interface MoodAnalysis {
   level: MoodLevel;
@@ -34,18 +25,34 @@ export interface HabitSuggestion {
   benefits: string[];
 }
 
-export interface ChatContext {
-  userId: string;
-  sessionId: string;
-  messages: ChatMessage[];
-  moodHistory: MoodAnalysis[];
-  lastActivity: Date;
-  preferences: UserPreferences;
+export interface UserPreferences {
+  communicationStyle?: string;
+  privacyLevel?: string;
+  preferredProfessionalType?: ProfessionalType | string;
+  habitCategories?: string[];
+  notificationSettings?: {
+    email: boolean;
+    push: boolean;
+    frequency: 'daily' | 'weekly' | 'monthly';
+  };
 }
 
-export interface UserPreferences {
-  preferredProfessionalType?: ProfessionalType;
-  habitCategories: HabitCategory[];
-  communicationStyle: 'formal' | 'casual' | 'empathetic';
-  privacyLevel: 'low' | 'medium' | 'high';
+export interface ChatMessage {
+  id?: string;
+  role?: 'user' | 'assistant';
+  type?: MessageType;
+  content: string;
+  timestamp: Date;
+  userId?: string;
+  moodAnalysis?: MoodAnalysis;
+}
+
+export interface ChatContext {
+  sessionId: string;
+  userId: string;
+  messages: ChatMessage[];
+  currentMood?: MoodLevel;
+  preferences?: UserPreferences;
+  moodHistory?: MoodAnalysis[];
+  lastActivity?: Date;
 }

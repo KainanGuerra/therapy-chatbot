@@ -13,16 +13,28 @@ export enum ProfessionalType {
   COUNSELOR = 'counselor',
 }
 
-export enum MessageType {
-  USER = 'user',
-  ASSISTANT = 'assistant',
-  SYSTEM = 'system',
-}
-
 export enum HabitCategory {
   MENTAL_HEALTH = 'mental_health',
   PHYSICAL_HEALTH = 'physical_health',
   WORK_LIFE_BALANCE = 'work_life_balance',
   STRESS_MANAGEMENT = 'stress_management',
   SOCIAL_CONNECTION = 'social_connection',
+}
+
+export enum ChatMessageType {
+  USER = 'user',
+  ASSISTANT = 'assistant',
+  SYSTEM = 'system',
+}
+
+export enum MessageType {
+  USER = 'user',
+  ASSISTANT = 'assistant',
+  SYSTEM = 'system',
+}
+
+export enum SessionStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  ARCHIVED = 'archived',
 }

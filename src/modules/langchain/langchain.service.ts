@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChatOpenAI } from '@langchain/openai';
-import { PromptTemplate } from 'langchain/prompts';
-import { LLMChain } from 'langchain/chains';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { MoodAnalysis, ProfessionalRecommendation, HabitSuggestion } from '../../common/interfaces';
 import { MoodLevel, ProfessionalType, HabitCategory } from '../../common/enums';
 
 @Injectable()
 export class LangChainService {
   private llm: ChatOpenAI;
-  private moodAnalysisChain: LLMChain;
-  private recommendationChain: LLMChain;
-  private habitSuggestionChain: LLMChain;
-  private chatResponseChain: LLMChain;
+  private moodAnalysisChain: any;
+  private recommendationChain: any;
+  private habitSuggestionChain: any;
+  private chatResponseChain: any;
 
   constructor(private configService: ConfigService) {
     this.initializeLLM();
@@ -31,7 +30,7 @@ export class LangChainService {
 
   private initializeChains() {
     // Mood Analysis Chain
-    const moodAnalysisPrompt = PromptTemplate.fromTemplate(`
+    const moodAnalysisPrompt = ChatPromptTemplate.fromTemplate(`
       Analyze the emotional state and mood of the following message from a workplace context.
       
       Message: "{message}"
@@ -46,13 +45,10 @@ export class LangChainService {
       Focus on workplace stress, burnout, anxiety, depression, and general wellbeing indicators.
     `);
 
-    this.moodAnalysisChain = new LLMChain({
-      llm: this.llm,
-      prompt: moodAnalysisPrompt,
-    });
+    this.moodAnalysisChain = moodAnalysisPrompt.pipe(this.llm);
 
     // Professional Recommendation Chain
-    const recommendationPrompt = PromptTemplate.fromTemplate(`
+    const recommendationPrompt = ChatPromptTemplate.fromTemplate(`
       Based on the user's mood analysis and message history, recommend the most appropriate mental health professional.
       
       Current mood level: {moodLevel}
@@ -72,13 +68,10 @@ export class LangChainService {
       - Counselors: for general support, workplace issues
     `);
 
-    this.recommendationChain = new LLMChain({
-      llm: this.llm,
-      prompt: recommendationPrompt,
-    });
+    this.recommendationChain = recommendationPrompt.pipe(this.llm);
 
     // Habit Suggestion Chain
-    const habitSuggestionPrompt = PromptTemplate.fromTemplate(`
+    const habitSuggestionPrompt = ChatPromptTemplate.fromTemplate(`
       Suggest healthy habits based on the user's current mood and workplace context.
       
       Mood level: {moodLevel}
@@ -97,13 +90,10 @@ export class LangChainService {
       Focus on evidence-based practices that can be done in a workplace environment.
     `);
 
-    this.habitSuggestionChain = new LLMChain({
-      llm: this.llm,
-      prompt: habitSuggestionPrompt,
-    });
+    this.habitSuggestionChain = habitSuggestionPrompt.pipe(this.llm);
 
     // Chat Response Chain
-    const chatResponsePrompt = PromptTemplate.fromTemplate(`
+    const chatResponsePrompt = ChatPromptTemplate.fromTemplate(`
       You are a compassionate AI therapy assistant for workplace wellness. Respond to the user's message with empathy and helpful guidance.
       
       User message: "{message}"
@@ -123,16 +113,13 @@ export class LangChainService {
       Respond in a supportive, professional manner.
     `);
 
-    this.chatResponseChain = new LLMChain({
-      llm: this.llm,
-      prompt: chatResponsePrompt,
-    });
+    this.chatResponseChain = chatResponsePrompt.pipe(this.llm);
   }
 
   async analyzeMood(message: string): Promise<MoodAnalysis> {
     try {
-      const response = await this.moodAnalysisChain.call({ message });
-      const analysis = JSON.parse(response.text);
+      const response = await this.moodAnalysisChain.invoke({ message });
+      const analysis = JSON.parse(response.content);
       
       return {
         level: analysis.level as MoodLevel,
@@ -160,13 +147,13 @@ export class LangChainService {
     preferences: any,
   ): Promise<ProfessionalRecommendation> {
     try {
-      const response = await this.recommendationChain.call({
+      const response = await this.recommendationChain.invoke({
         moodLevel,
         messageHistory: messageHistory.join('\n'),
         preferences: JSON.stringify(preferences),
       });
       
-      const recommendation = JSON.parse(response.text);
+      const recommendation = JSON.parse(response.content);
       
       return {
         type: recommendation.type as ProfessionalType,
@@ -191,13 +178,13 @@ export class LangChainService {
     previousHabits: string[],
   ): Promise<HabitSuggestion[]> {
     try {
-      const response = await this.habitSuggestionChain.call({
+      const response = await this.habitSuggestionChain.invoke({
         moodLevel,
         userContext,
         previousHabits: previousHabits.join(', '),
       });
       
-      const suggestions = JSON.parse(response.text);
+      const suggestions = JSON.parse(response.content);
       
       return suggestions.map((suggestion: any) => ({
         id: suggestion.id,
@@ -221,7 +208,7 @@ export class LangChainService {
     preferences: any,
   ): Promise<string> {
     try {
-      const response = await this.chatResponseChain.call({
+      const response = await this.chatResponseChain.invoke({
         message,
         moodLevel,
         context,
@@ -230,7 +217,7 @@ export class LangChainService {
         privacyLevel: preferences.privacyLevel || 'medium',
       });
       
-      return response.text;
+      return response.content;
     } catch (error) {
       console.error('Error generating chat response:', error);
       return "I understand you're reaching out, and I'm here to support you. Could you tell me a bit more about how you're feeling today?";
