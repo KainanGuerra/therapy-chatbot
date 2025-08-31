@@ -32,16 +32,13 @@ export class HabitsService {
   }
 
   async getUserHabits(userId: string, category?: HabitCategory): Promise<HabitTracking[]> {
-    const query = this.habitTrackingRepository.createQueryBuilder('habit')
-      .where('habit.userId = :userId', { userId });
+    const query = this.habitTrackingRepository.createQueryBuilder('habit').where('habit.userId = :userId', { userId });
 
     if (category) {
       query.andWhere('habit.category = :category', { category });
     }
 
-    return query
-      .orderBy('habit.createdAt', 'DESC')
-      .getMany();
+    return query.orderBy('habit.createdAt', 'DESC').getMany();
   }
 
   async getHabitById(id: string, userId: string): Promise<HabitTracking> {
@@ -91,7 +88,7 @@ export class HabitsService {
     // Check cache first
     const cacheKey = `habit_suggestions:${userId}`;
     const cachedSuggestions = await this.redisService.getCachedData(cacheKey);
-    
+
     if (cachedSuggestions) {
       return cachedSuggestions;
     }
@@ -105,15 +102,16 @@ export class HabitsService {
 
     // Get user's existing habits
     const existingHabits = await this.getUserHabits(userId);
-    const existingHabitTitles = existingHabits.map(h => h.title);
+    const existingHabitTitles = existingHabits.map((h) => h.title);
 
     // Get user preferences
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
     // Calculate average mood level
-    const avgMoodLevel = recentMoods.length > 0
-      ? Math.round(recentMoods.reduce((sum, mood) => sum + mood.level, 0) / recentMoods.length)
-      : MoodLevel.NEUTRAL;
+    const avgMoodLevel =
+      recentMoods.length > 0
+        ? Math.round(recentMoods.reduce((sum, mood) => sum + mood.level, 0) / recentMoods.length)
+        : MoodLevel.NEUTRAL;
 
     // Build user context
     const userContext = this.buildUserContext(user, recentMoods, existingHabits);
@@ -145,7 +143,7 @@ export class HabitsService {
     if (moods.length > 0) {
       const avgMood = moods.reduce((sum, mood) => sum + mood.level, 0) / moods.length;
       context.push(`Average mood level: ${avgMood.toFixed(1)}/5`);
-      
+
       const commonEmotions = this.getCommonEmotions(moods);
       if (commonEmotions.length > 0) {
         context.push(`Common emotions: ${commonEmotions.join(', ')}`);
@@ -153,10 +151,10 @@ export class HabitsService {
     }
 
     if (habits.length > 0) {
-      const categories = [...new Set(habits.map(h => h.category))];
+      const categories = [...new Set(habits.map((h) => h.category))];
       context.push(`Current habit categories: ${categories.join(', ')}`);
-      
-      const completedHabits = habits.filter(h => h.isCompleted).length;
+
+      const completedHabits = habits.filter((h) => h.isCompleted).length;
       context.push(`Completed habits: ${completedHabits}/${habits.length}`);
     }
 
@@ -165,10 +163,10 @@ export class HabitsService {
 
   private getCommonEmotions(moods: MoodEntry[]): string[] {
     const emotionCounts = new Map<string, number>();
-    
-    moods.forEach(mood => {
+
+    moods.forEach((mood) => {
       if (mood.emotions) {
-        mood.emotions.forEach(emotion => {
+        mood.emotions.forEach((emotion) => {
           emotionCounts.set(emotion, (emotionCounts.get(emotion) || 0) + 1);
         });
       }
@@ -190,16 +188,19 @@ export class HabitsService {
     const habits = await this.getUserHabits(userId);
 
     const totalHabits = habits.length;
-    const completedHabits = habits.filter(h => h.isCompleted).length;
+    const completedHabits = habits.filter((h) => h.isCompleted).length;
     const completionRate = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
 
-    const maxStreak = Math.max(...habits.map(h => h.streakCount), 0);
-    const currentStreaks = habits.filter(h => h.streakCount > 0).length;
+    const maxStreak = Math.max(...habits.map((h) => h.streakCount), 0);
+    const currentStreaks = habits.filter((h) => h.streakCount > 0).length;
 
-    const categoryBreakdown = habits.reduce((acc, habit) => {
-      acc[habit.category] = (acc[habit.category] || 0) + 1;
-      return acc;
-    }, {} as Record<HabitCategory, number>);
+    const categoryBreakdown = habits.reduce(
+      (acc, habit) => {
+        acc[habit.category] = (acc[habit.category] || 0) + 1;
+        return acc;
+      },
+      {} as Record<HabitCategory, number>,
+    );
 
     return {
       totalHabits,
@@ -220,7 +221,7 @@ export class HabitsService {
   async resetHabitStreak(id: string, userId: string): Promise<HabitTracking> {
     await this.habitTrackingRepository.update(
       { id, userId },
-      { streakCount: 0, isCompleted: false, completedAt: null }
+      { streakCount: 0, isCompleted: false, completedAt: null },
     );
     return this.getHabitById(id, userId);
   }

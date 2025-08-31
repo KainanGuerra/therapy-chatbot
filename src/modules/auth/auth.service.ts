@@ -44,7 +44,8 @@ export class AuthService {
     const token = this.generateToken(savedUser);
 
     // Remove password from response
-    const { password: _, ...userResponse } = savedUser;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userResponse } = savedUser;
 
     return { user: userResponse, token };
   }
@@ -68,7 +69,8 @@ export class AuthService {
     const token = this.generateToken(user);
 
     // Remove password from response
-    const { password: _, ...userResponse } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password2, ...userResponse } = user;
 
     return { user: userResponse, token };
   }

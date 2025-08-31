@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ProfessionalsService } from './professionals.service';
 import { CreateProfessionalDto, UpdateProfessionalDto, RateProfessionalDto } from './dto/professional.dto';
@@ -36,10 +26,7 @@ export class ProfessionalsController {
   @ApiResponse({ status: 200, description: 'Professionals retrieved successfully' })
   @ApiQuery({ name: 'type', enum: ProfessionalType, required: false })
   @ApiQuery({ name: 'specialization', type: 'string', required: false })
-  findAll(
-    @Query('type') type?: ProfessionalType,
-    @Query('specialization') specialization?: string,
-  ) {
+  findAll(@Query('type') type?: ProfessionalType, @Query('specialization') specialization?: string) {
     return this.professionalsService.findAll(type, specialization);
   }
 
@@ -91,11 +78,7 @@ export class ProfessionalsController {
   @Post(':id/rate')
   @ApiOperation({ summary: 'Rate a professional' })
   @ApiResponse({ status: 200, description: 'Professional rated successfully' })
-  rateProfessional(
-    @Param('id') id: string,
-    @Body() rateProfessionalDto: RateProfessionalDto,
-    @GetUser() user: User,
-  ) {
+  rateProfessional(@Param('id') id: string, @Body() rateProfessionalDto: RateProfessionalDto, @GetUser() user: User) {
     return this.professionalsService.rateProfessional(id, rateProfessionalDto.rating, user.id);
   }
 

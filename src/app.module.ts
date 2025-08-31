@@ -41,10 +41,12 @@ import * as entities from './entities';
     // Rate Limiting
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        ttl: configService.get<number>('THROTTLE_TTL', 60),
-        limit: configService.get<number>('THROTTLE_LIMIT', 10),
-      }),
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: configService.get<number>('THROTTLE_TTL', 60) * 1000, // Convert to milliseconds
+          limit: configService.get<number>('THROTTLE_LIMIT', 10),
+        },
+      ],
       inject: [ConfigService],
     }),
 

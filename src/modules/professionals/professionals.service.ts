@@ -27,7 +27,8 @@ export class ProfessionalsService {
   }
 
   async findAll(type?: ProfessionalType, specialization?: string): Promise<Professional[]> {
-    const query = this.professionalRepository.createQueryBuilder('professional')
+    const query = this.professionalRepository
+      .createQueryBuilder('professional')
       .where('professional.isAvailable = :isAvailable', { isAvailable: true });
 
     if (type) {
@@ -40,10 +41,7 @@ export class ProfessionalsService {
       });
     }
 
-    return query
-      .orderBy('professional.rating', 'DESC')
-      .addOrderBy('professional.reviewCount', 'DESC')
-      .getMany();
+    return query.orderBy('professional.rating', 'DESC').addOrderBy('professional.reviewCount', 'DESC').getMany();
   }
 
   async findOne(id: string): Promise<Professional> {
@@ -76,15 +74,16 @@ export class ProfessionalsService {
 
     // Get user preferences
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    
+
     // Calculate average mood level
-    const avgMoodLevel = recentMoods.length > 0
-      ? Math.round(recentMoods.reduce((sum, mood) => sum + mood.level, 0) / recentMoods.length)
-      : MoodLevel.NEUTRAL;
+    const avgMoodLevel =
+      recentMoods.length > 0
+        ? Math.round(recentMoods.reduce((sum, mood) => sum + mood.level, 0) / recentMoods.length)
+        : MoodLevel.NEUTRAL;
 
     // Get recent message history (simplified - in real app, get from chat context)
-    const messageHistory = recentMoods.map(mood => 
-      `Mood: ${mood.level}, Keywords: ${mood.keywords?.join(', ')}, Sentiment: ${mood.sentiment}`
+    const messageHistory = recentMoods.map(
+      (mood) => `Mood: ${mood.level}, Keywords: ${mood.keywords?.join(', ')}, Sentiment: ${mood.sentiment}`,
     );
 
     // Get AI recommendation
@@ -107,21 +106,20 @@ export class ProfessionalsService {
     return { recommendation, professionals };
   }
 
-  private async findProfessionalsByRecommendation(
-    recommendation: ProfessionalRecommendation,
-  ): Promise<Professional[]> {
-    const query = this.professionalRepository.createQueryBuilder('professional')
+  private async findProfessionalsByRecommendation(recommendation: ProfessionalRecommendation): Promise<Professional[]> {
+    const query = this.professionalRepository
+      .createQueryBuilder('professional')
       .where('professional.isAvailable = :isAvailable', { isAvailable: true })
       .andWhere('professional.type = :type', { type: recommendation.type });
 
     // Filter by specializations if available
     if (recommendation.specializations.length > 0) {
-      const specializationConditions = recommendation.specializations.map((spec, index) => 
-        `professional.specializations @> :spec${index}`
-      ).join(' OR ');
-      
+      const specializationConditions = recommendation.specializations
+        .map((spec, index) => `professional.specializations @> :spec${index}`)
+        .join(' OR ');
+
       query.andWhere(`(${specializationConditions})`);
-      
+
       recommendation.specializations.forEach((spec, index) => {
         query.setParameter(`spec${index}`, JSON.stringify([spec]));
       });
@@ -134,9 +132,9 @@ export class ProfessionalsService {
       .getMany();
   }
 
-  async rateProfessional(professionalId: string, rating: number, userId: string): Promise<Professional> {
+  async rateProfessional(professionalId: string, rating: number, _userId: string): Promise<Professional> {
     const professional = await this.findOne(professionalId);
-    
+
     // Calculate new rating (simplified - in production, store individual ratings)
     const totalRating = (professional.rating || 0) * professional.reviewCount + rating;
     const newReviewCount = professional.reviewCount + 1;
@@ -151,11 +149,12 @@ export class ProfessionalsService {
   }
 
   async searchProfessionals(query: string): Promise<Professional[]> {
-    return this.professionalRepository.createQueryBuilder('professional')
+    return this.professionalRepository
+      .createQueryBuilder('professional')
       .where('professional.isAvailable = :isAvailable', { isAvailable: true })
       .andWhere(
         '(professional.name ILIKE :query OR professional.specializations::text ILIKE :query OR professional.bio ILIKE :query)',
-        { query: `%${query}%` }
+        { query: `%${query}%` },
       )
       .orderBy('professional.rating', 'DESC')
       .limit(10)

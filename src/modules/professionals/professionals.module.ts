@@ -6,10 +6,7 @@ import { Professional, MoodEntry, User } from '../../entities';
 import { LangChainModule } from '../langchain/langchain.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Professional, MoodEntry, User]),
-    LangChainModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Professional, MoodEntry, User]), LangChainModule],
   controllers: [ProfessionalsController],
   providers: [ProfessionalsService],
   exports: [ProfessionalsService],

@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 import { ChatSession, ChatMessage, MoodEntry, User } from '../../entities';
 import { RedisService } from '../redis/redis.service';
 import { LangChainService } from '../langchain/langchain.service';
 import { SendMessageDto, CreateSessionDto } from './dto/chat.dto';
 import { ChatContext, MoodAnalysis } from '../../common/interfaces';
-import { MessageType, MoodLevel } from '../../common/enums';
+import { MessageType } from '../../common/enums';
 
 @Injectable()
 export class ChatService {
@@ -57,12 +56,16 @@ export class ChatService {
     });
   }
 
-  async sendMessage(userId: string, sendMessageDto: SendMessageDto): Promise<{
+  async sendMessage(
+    userId: string,
+    sendMessageDto: SendMessageDto,
+  ): Promise<{
     userMessage: ChatMessage;
     assistantMessage: ChatMessage;
     moodAnalysis: MoodAnalysis;
   }> {
-    let { sessionId, content } = sendMessageDto;
+    const { sessionId: originalSessionId, content } = sendMessageDto;
+    let sessionId = originalSessionId;
 
     // Create new session if not provided
     if (!sessionId) {
@@ -139,17 +142,22 @@ export class ChatService {
       // Build context from database
       const messages = await this.getSessionMessages(sessionId, userId);
       const user = await this.userRepository.findOne({ where: { id: userId } });
-      
+
       context = {
         userId,
         sessionId,
-        messages: messages.map(msg => ({
+        messages: messages.map((msg) => ({
           id: msg.id,
           userId,
           content: msg.content,
           type: msg.type,
           timestamp: msg.createdAt,
-          moodAnalysis: msg.moodAnalysis,
+          moodAnalysis: msg.moodAnalysis
+            ? {
+                ...msg.moodAnalysis,
+                sentiment: msg.moodAnalysis.sentiment as 'positive' | 'negative' | 'neutral',
+              }
+            : undefined,
         })),
         moodHistory: [],
         lastActivity: new Date(),
@@ -207,9 +215,7 @@ export class ChatService {
 
   private buildContextString(context: ChatContext): string {
     const recentMessages = context.messages.slice(-5);
-    return recentMessages
-      .map(msg => `${msg.type}: ${msg.content}`)
-      .join('\n');
+    return recentMessages.map((msg) => `${msg.type}: ${msg.content}`).join('\n');
   }
 
   private async saveMoodEntry(userId: string, moodAnalysis: MoodAnalysis): Promise<void> {

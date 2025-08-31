@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
@@ -7,6 +7,8 @@ import { MoodLevel, ProfessionalType, HabitCategory } from '../../common/enums';
 
 @Injectable()
 export class LangChainService {
+  private readonly logger = new Logger(LangChainService.name);
+
   private llm: ChatOpenAI;
   private moodAnalysisChain: any;
   private recommendationChain: any;
@@ -120,7 +122,7 @@ export class LangChainService {
     try {
       const response = await this.moodAnalysisChain.invoke({ message });
       const analysis = JSON.parse(response.content);
-      
+
       return {
         level: analysis.level as MoodLevel,
         confidence: analysis.confidence,
@@ -129,7 +131,7 @@ export class LangChainService {
         emotions: analysis.emotions,
       };
     } catch (error) {
-      console.error('Error analyzing mood:', error);
+      this.logger.error('Error analyzing mood:', error);
       // Return default analysis if AI fails
       return {
         level: MoodLevel.NEUTRAL,
@@ -152,9 +154,9 @@ export class LangChainService {
         messageHistory: messageHistory.join('\n'),
         preferences: JSON.stringify(preferences),
       });
-      
+
       const recommendation = JSON.parse(response.content);
-      
+
       return {
         type: recommendation.type as ProfessionalType,
         reason: recommendation.reason,
@@ -162,7 +164,7 @@ export class LangChainService {
         specializations: recommendation.specializations,
       };
     } catch (error) {
-      console.error('Error generating professional recommendation:', error);
+      this.logger.error('Error generating professional recommendation:', error);
       return {
         type: ProfessionalType.COUNSELOR,
         reason: 'General workplace support recommended',
@@ -172,20 +174,16 @@ export class LangChainService {
     }
   }
 
-  async suggestHabits(
-    moodLevel: MoodLevel,
-    userContext: string,
-    previousHabits: string[],
-  ): Promise<HabitSuggestion[]> {
+  async suggestHabits(moodLevel: MoodLevel, userContext: string, previousHabits: string[]): Promise<HabitSuggestion[]> {
     try {
       const response = await this.habitSuggestionChain.invoke({
         moodLevel,
         userContext,
         previousHabits: previousHabits.join(', '),
       });
-      
+
       const suggestions = JSON.parse(response.content);
-      
+
       return suggestions.map((suggestion: any) => ({
         id: suggestion.id,
         title: suggestion.title,
@@ -196,7 +194,7 @@ export class LangChainService {
         benefits: suggestion.benefits,
       }));
     } catch (error) {
-      console.error('Error generating habit suggestions:', error);
+      this.logger.error('Error generating habit suggestions:', error);
       return [];
     }
   }
@@ -216,10 +214,10 @@ export class LangChainService {
         communicationStyle: preferences.communicationStyle || 'empathetic',
         privacyLevel: preferences.privacyLevel || 'medium',
       });
-      
+
       return response.content;
     } catch (error) {
-      console.error('Error generating chat response:', error);
+      this.logger.error('Error generating chat response:', error);
       return "I understand you're reaching out, and I'm here to support you. Could you tell me a bit more about how you're feeling today?";
     }
   }

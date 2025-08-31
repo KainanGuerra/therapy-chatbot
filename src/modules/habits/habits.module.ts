@@ -6,10 +6,7 @@ import { HabitTracking, MoodEntry, User } from '../../entities';
 import { LangChainModule } from '../langchain/langchain.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([HabitTracking, MoodEntry, User]),
-    LangChainModule,
-  ],
+  imports: [TypeOrmModule.forFeature([HabitTracking, MoodEntry, User]), LangChainModule],
   controllers: [HabitsController],
   providers: [HabitsService],
   exports: [HabitsService],
