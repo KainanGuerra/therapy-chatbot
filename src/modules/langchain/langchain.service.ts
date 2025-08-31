@@ -33,86 +33,84 @@ export class LangChainService {
   private initializeChains() {
     // Mood Analysis Chain
     const moodAnalysisPrompt = ChatPromptTemplate.fromTemplate(`
-      Analyze the emotional state and mood of the following message from a workplace context.
+      Analise o estado emocional e o humor da seguinte mensagem em um contexto de ambiente de trabalho.
       
-      Message: "{message}"
-      
-      Please provide a JSON response with:
-      - level: mood level from 1-5 (1=very low, 2=low, 3=neutral, 4=good, 5=excellent)
-      - confidence: confidence score from 0-1
-      - keywords: array of relevant emotional keywords
-      - sentiment: "positive", "negative", or "neutral"
-      - emotions: array of detected emotions
-      
-      Focus on workplace stress, burnout, anxiety, depression, and general wellbeing indicators.
+      Mensagem: "{message}"
+
+      Por favor, forneça uma resposta em JSON com:
+      level: nível de humor de 1 a 5 (1=muito baixo, 2=baixo, 3=neutro, 4=bom, 5=excelente)
+      confidence: nível de confiança de 0 a 1
+      keywords: array de palavras-chave emocionais relevantes
+      sentiment: "positivo", "negativo" ou "neutro"
+      emotions: array de emoções detectadas
+      Foque em indicadores de estresse no trabalho, burnout, ansiedade, depressão e bem-estar geral.
     `);
 
     this.moodAnalysisChain = moodAnalysisPrompt.pipe(this.llm);
 
     // Professional Recommendation Chain
     const recommendationPrompt = ChatPromptTemplate.fromTemplate(`
-      Based on the user's mood analysis and message history, recommend the most appropriate mental health professional.
-      
-      Current mood level: {moodLevel}
-      Recent messages: {messageHistory}
-      User preferences: {preferences}
-      
-      Provide a JSON response with:
-      - type: "psychologist", "therapist", "psychiatrist", or "counselor"
-      - reason: explanation for the recommendation
-      - urgency: "low", "medium", or "high"
-      - specializations: array of relevant specializations
-      
-      Consider:
-      - Psychologists: for cognitive behavioral therapy, assessment
-      - Therapists: for talk therapy, relationship issues
-      - Psychiatrists: for medication management, severe conditions
-      - Counselors: for general support, workplace issues
+      Com base na análise de humor do usuário e no histórico de mensagens, recomende o profissional de saúde mental mais apropriado.
+      Nível atual de humor: {moodLevel}
+      Mensagens recentes: {messageHistory}
+      Preferências do usuário: {preferences}
+
+      Forneça uma resposta em JSON com:
+      type: "psicólogo", "terapeuta", "psiquiatra" ou "conselheiro"
+      reason: explicação para a recomendação
+      urgency: "baixa", "média" ou "alta"
+      specializations: array de especializações relevantes
+
+      Considere:
+      Psicólogos: para terapia cognitivo-comportamental, avaliação
+      Terapeutas: para terapia de conversa, questões de relacionamento
+      Psiquiatras: para gerenciamento de medicação, condições graves
+      Conselheiros: para apoio geral, questões de ambiente de trabalho
     `);
 
     this.recommendationChain = recommendationPrompt.pipe(this.llm);
 
     // Habit Suggestion Chain
     const habitSuggestionPrompt = ChatPromptTemplate.fromTemplate(`
-      Suggest healthy habits based on the user's current mood and workplace context.
-      
-      Mood level: {moodLevel}
-      User context: {userContext}
-      Previous habits: {previousHabits}
-      
-      Provide a JSON array of habit suggestions with:
-      - id: unique identifier
-      - title: habit name
-      - description: detailed description
-      - category: "mental_health", "physical_health", "work_life_balance", "stress_management", or "social_connection"
-      - difficulty: "easy", "medium", or "hard"
-      - estimatedTime: time required (e.g., "5 minutes", "30 minutes")
-      - benefits: array of expected benefits
-      
-      Focus on evidence-based practices that can be done in a workplace environment.
+      Sugira hábitos saudáveis com base no humor atual do usuário e no contexto de trabalho.
+
+      Nível de humor: {moodLevel}
+      Contexto do usuário: {userContext}
+      Hábitos anteriores: {previousHabits}
+
+      Forneça um array em JSON de sugestões de hábitos com:
+      id: identificador único
+      title: nome do hábito
+      description: descrição detalhada
+      category: "saúde_mental", "saúde_física", "equilíbrio_vida_trabalho", "gestão_de_estresse" ou "conexão_social"
+      difficulty: "fácil", "médio" ou "difícil"
+      estimatedTime: tempo necessário (ex.: "5 minutos", "30 minutos")
+      benefits: array de benefícios esperados
+
+      Foque em práticas baseadas em evidências que possam ser realizadas em um ambiente de trabalho.
     `);
 
     this.habitSuggestionChain = habitSuggestionPrompt.pipe(this.llm);
 
     // Chat Response Chain
     const chatResponsePrompt = ChatPromptTemplate.fromTemplate(`
-      You are a compassionate AI therapy assistant for workplace wellness. Respond to the user's message with empathy and helpful guidance.
+      Você é um assistente de terapia por IA compassivo, voltado para o bem-estar no ambiente de trabalho. Responda à mensagem do usuário com empatia e orientação útil.     
       
       User message: "{message}"
       User mood level: {moodLevel}
       Conversation context: {context}
       User preferences: {preferences}
       
-      Guidelines:
-      - Be empathetic and non-judgmental
-      - Provide practical workplace-appropriate advice
-      - Encourage professional help when needed
-      - Use the user's preferred communication style: {communicationStyle}
-      - Respect privacy level: {privacyLevel}
-      - Don't provide medical diagnoses
-      - Focus on coping strategies and wellness
-      
-      Respond in a supportive, professional manner.
+      Diretrizes:
+
+      Seja empático e não julgador
+      Forneça conselhos práticos e adequados ao ambiente de trabalho
+      Incentive a busca por ajuda profissional quando necessário
+      Use o estilo de comunicação preferido pelo usuário: {communicationStyle}
+      Respeite o nível de privacidade: {privacyLevel}
+      Não forneça diagnósticos médicos
+      Foque em estratégias de enfrentamento e bem-estar
+      Responda de maneira solidária e profissional.
     `);
 
     this.chatResponseChain = chatResponsePrompt.pipe(this.llm);
@@ -214,10 +212,9 @@ export class LangChainService {
         communicationStyle: preferences.communicationStyle || 'empathetic',
         privacyLevel: preferences.privacyLevel || 'medium',
       });
-
       return response.content;
     } catch (error) {
-      this.logger.error('Error generating chat response:', error);
+      this.logger.error('Error generating chat response:', JSON.stringify(error));
       return "I understand you're reaching out, and I'm here to support you. Could you tell me a bit more about how you're feeling today?";
     }
   }

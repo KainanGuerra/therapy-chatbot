@@ -4,6 +4,6 @@ export default registerAs('langchain', () => ({
   openaiApiKey: process.env.OPENAI_API_KEY,
   modelName: 'gpt-3.5-turbo',
   temperature: 0.7,
-  maxTokens: 1000,
+  maxTokens: 200,
   contextWindowSize: 4000,
 }));
